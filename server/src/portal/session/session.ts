@@ -51,7 +51,7 @@ import {
 } from '@/memory/journal/journal-query.js';
 import { type AmbientCounts } from '@reticlehq/engine/window/ambient.js';
 import { ObservedState, controlLabelsOf } from './facts/observed-state.js';
-import { DepartureNote } from './departure-note.js';
+import { DepartureNote } from './facts/departure-note.js';
 import {
   recordBrowserLatency,
   recordHudUse,
