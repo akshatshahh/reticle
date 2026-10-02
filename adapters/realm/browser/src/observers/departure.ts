@@ -79,6 +79,14 @@ function anchorFor(target: EventTarget | null): HTMLAnchorElement | undefined {
   return anchor instanceof HTMLAnchorElement ? anchor : undefined;
 }
 
+/**
+ * How long a recorded departure suppresses a matching Navigation API event for the same URL.
+ *
+ * Following an anchor fires BOTH the click listener and `navigate`; without this, one departure
+ * is recorded as two unmatched NET_PENDINGs, which reads downstream as two in-flight requests.
+ */
+const DUPLICATE_WINDOW_MS = 1000;
+
 /** True when following this anchor leaves the page the SDK is instrumenting. */
 export function isDeparture(href: string, downloadAttr: boolean, here: string): boolean {
   if (0 === href.length || NON_NAVIGATING.test(href)) return false;
@@ -102,7 +110,18 @@ export function isDeparture(href: string, downloadAttr: boolean, here: string): 
 export function installDeparture(emit: Emit): Teardown {
   if ('undefined' === typeof document) return () => undefined;
   let seq = 0;
+  /** The most recent departure recorded, so a `navigate` for the same traversal is not a second. */
+  let lastRecorded: { url: string; at: number } | undefined;
   const record = (url: string, download: boolean): void => {
+    const now = Date.now();
+    if (
+      lastRecorded !== undefined &&
+      lastRecorded.url === url &&
+      now - lastRecorded.at < DUPLICATE_WINDOW_MS
+    ) {
+      return;
+    }
+    lastRecorded = { url, at: now };
     seq += 1;
     emit(EventType.NET_PENDING, {
       id: `nav-${String(seq)}`,

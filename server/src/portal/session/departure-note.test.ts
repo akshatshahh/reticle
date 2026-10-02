@@ -45,4 +45,22 @@ describe('DepartureNote', () => {
     expect(note.read(100 + 29_999)).toBe('http://localhost:5173/login');
     expect(note.read(100 + 30_001)).toBeUndefined();
   });
+
+  it('ignores a download — the document does not go away', () => {
+    const note = new DepartureNote();
+    note.observe(
+      {
+        type: EventType.NET_PENDING,
+        data: {
+          id: 'nav-1',
+          method: 'GET',
+          url: 'http://localhost:5173/export.pdf',
+          initiator: 'navigation',
+          download: true,
+        },
+      } as unknown as ReticleEvent,
+      100,
+    );
+    expect(note.read(100)).toBeUndefined();
+  });
 });

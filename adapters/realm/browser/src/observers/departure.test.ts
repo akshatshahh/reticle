@@ -240,6 +240,16 @@ describe('the Navigation API (programmatic navigation)', () => {
     expect(event?.data['initiator']).toBe(NetInitiator.NAVIGATION);
   });
 
+  it('records an anchor click and its navigate event only once', async () => {
+    // Following a link fires the click listener AND the Navigation API. One departure, one
+    // pending — two would read downstream as two requests still in flight.
+    await clickAnchor({ href: 'https://example.com/page' });
+    dispatchNavigate('https://example.com/page');
+    const all = await settle();
+    expect(all).toHaveLength(1);
+    expect(all[0]?.data['initiator']).toBe(NetInitiator.NAVIGATION);
+  });
+
   it('says nothing for a same-document transition', async () => {
     dispatchNavigate('http://localhost:5173/dashboard#section-2', { sameDocument: true });
     expect(await settle()).toHaveLength(0);

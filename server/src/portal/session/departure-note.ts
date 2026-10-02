@@ -25,6 +25,8 @@ export class DepartureNote {
     // Only navigation-initiated pendings count: a fetch that never settled is in-flight work,
     // not a departure.
     if (event.data['initiator'] !== NetInitiator.NAVIGATION) return;
+    // A download never takes the document away, so it must not explain a later disconnect.
+    if (true === event.data['download']) return;
     const url = event.data['url'];
     if ('string' !== typeof url || 0 === url.length) return;
     this.#note = { url, at: elapsedMs };

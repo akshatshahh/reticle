@@ -13,6 +13,7 @@
  */
 
 import { NoSessionReason } from '@reticlehq/core/telemetry';
+import { redactUrl } from '@reticlehq/core';
 
 import { leaseCaveat, type LeaseBrowserState } from './presence/lease-availability.js';
 import { DEV_SERVER_PORTS } from '@/command/cli/ports/resolve/cli-port.js';
@@ -648,9 +649,11 @@ export function explainNoSession(facts: NoSessionFacts): {
       return reason(
         NoSessionReason.NAVIGATED_AWAY,
         'no browser session connected, but one WAS connected to this daemon earlier, so the wiring ' +
-          `is correct. The page navigated away to ${facts.departedTo} just before the connection ` +
-          'closed — that is where the tab went, not a closed tab and not an install problem. ' +
-          `Ask the human to go back to the app${orOpenCommand(facts)}, or reload the tab. ` +
+          // Redacted: a redirect target can carry credentials (OAuth callbacks, reset links), and
+          // this message is agent-facing. The raw value stays on the tombstone for matching.
+          `is correct. The page navigated away to ${redactUrl(facts.departedTo)} just before the ` +
+          'connection closed — that is where the tab went, not a closed tab and not an install ' +
+          `problem. Ask the human to go back to the app${orOpenCommand(facts)}, or reload the tab. ` +
           `${leaseAdvice(SELF_SERVE, facts)} ${RETRY}`,
         alreadyListeningClause(listening).trim(),
       );

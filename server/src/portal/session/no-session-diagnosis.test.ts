@@ -440,6 +440,21 @@ describe('a tab seen navigating away is not a closed tab', () => {
     expect(plain).not.toMatch(/navigated away to/i);
     expect(plain).toMatch(/tab was closed, navigated away, or hard-reloaded/i);
   });
+
+  it('redacts credentials in the reported destination', () => {
+    const msg = diagnoseNoSession({
+      everConnected: true,
+      initialized: true,
+      listening: [3000],
+      port: 4400,
+      lastKnownUrl: 'http://localhost:3000/',
+      departedTo: 'https://user:s3cret@example.com/oauth/callback?token=abc123',
+    });
+    expect(msg).toMatch(/navigated away to/i);
+    expect(msg, 'userinfo must not reach the agent transcript').not.toContain('s3cret');
+    expect(msg, 'token params must not reach the agent transcript').not.toContain('abc123');
+    expect(msg).toContain('example.com/oauth/callback');
+  });
 });
 
 /**
