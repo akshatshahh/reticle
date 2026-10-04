@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from 'vitest';
-import { isActionTarget, isElement, isHtmlElement, isInput, isFrame, valuePrototypeOf } from './realm.js';
+import { isActionTarget, isButton, isElement, isHtmlElement, isInput, isSelect, isTextArea, isFrame, valuePrototypeOf } from './realm.js';
 
 /**
  * The bug these guard: `instanceof` compares against ONE realm's constructor, so an element inside a
@@ -114,5 +114,22 @@ describe('isActionTarget cross-realm fallback (#1323)', () => {
   it('still accepts real elements via the instanceof fast path', () => {
     expect(isActionTarget(document.createElement('button'))).toBe(true);
     expect(isActionTarget(document.createElementNS('http://www.w3.org/2000/svg', 'rect'))).toBe(true);
+  });
+
+  it('accepts leased field subtypes via tagName fallback', () => {
+    // Greptile P1: the namespace fallback on isActionTarget is not enough —
+    // fill/type/clear/select dispatch on subtype checks, which must also
+    // accept leased elements.
+    const leasedInput = { nodeType: 1, tagName: 'INPUT', namespaceURI: 'http://www.w3.org/1999/xhtml' };
+    const leasedSelect = { nodeType: 1, tagName: 'SELECT', namespaceURI: 'http://www.w3.org/1999/xhtml' };
+    const leasedTextArea = { nodeType: 1, tagName: 'TEXTAREA', namespaceURI: 'http://www.w3.org/1999/xhtml' };
+    const leasedButton = { nodeType: 1, tagName: 'BUTTON', namespaceURI: 'http://www.w3.org/1999/xhtml' };
+    expect(isInput(leasedInput)).toBe(true);
+    expect(isSelect(leasedSelect)).toBe(true);
+    expect(isTextArea(leasedTextArea)).toBe(true);
+    expect(isButton(leasedButton)).toBe(true);
+    // Wrong tags are still rejected.
+    expect(isInput(leasedButton)).toBe(false);
+    expect(isSelect(leasedInput)).toBe(false);
   });
 });

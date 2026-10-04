@@ -34,9 +34,18 @@ function ctorIn(node: unknown, name: string): unknown {
  * Falls back to the ambient constructor when the node has no view — a detached document, or a jsdom
  * fragment — so behaviour outside a browser is unchanged.
  */
-function isIn<T>(node: unknown, name: string, ambient: unknown): node is T {
+function isIn<T>(node: unknown, name: string, ambient: unknown, tag?: string): node is T {
   const ctor = ctorIn(node, name) ?? ambient;
-  return 'function' === typeof ctor && node instanceof (ctor as new () => unknown);
+  if ('function' === typeof ctor && node instanceof (ctor as new () => unknown)) return true;
+  // Cross-realm fallback (#1323): in isolated contexts (e.g., leased browser
+  // tabs), the node's realm constructors can be unreachable, so instanceof
+  // fails for genuine elements. The tagName is set by the DOM implementation
+  // itself and is realm-independent.
+  if (undefined !== tag && 'object' === typeof node && null !== node) {
+    const el = node as Element;
+    return 1 === el.nodeType /* Node.ELEMENT_NODE */ && el.tagName === tag;
+  }
+  return false;
 }
 
 export const isElement = (n: unknown): n is Element =>
@@ -47,6 +56,7 @@ export const isImage = (n: unknown): n is HTMLImageElement =>
     n,
     'HTMLImageElement',
     'undefined' === typeof HTMLImageElement ? undefined : HTMLImageElement,
+    'IMG',
   );
 
 export const isHtmlElement = (n: unknown): n is HTMLElement =>
@@ -86,6 +96,7 @@ export const isInput = (n: unknown): n is HTMLInputElement =>
     n,
     'HTMLInputElement',
     'undefined' === typeof HTMLInputElement ? undefined : HTMLInputElement,
+    'INPUT',
   );
 
 export const isTextArea = (n: unknown): n is HTMLTextAreaElement =>
@@ -93,6 +104,7 @@ export const isTextArea = (n: unknown): n is HTMLTextAreaElement =>
     n,
     'HTMLTextAreaElement',
     'undefined' === typeof HTMLTextAreaElement ? undefined : HTMLTextAreaElement,
+    'TEXTAREA',
   );
 
 export const isSelect = (n: unknown): n is HTMLSelectElement =>
@@ -100,6 +112,7 @@ export const isSelect = (n: unknown): n is HTMLSelectElement =>
     n,
     'HTMLSelectElement',
     'undefined' === typeof HTMLSelectElement ? undefined : HTMLSelectElement,
+    'SELECT',
   );
 
 export const isButton = (n: unknown): n is HTMLButtonElement =>
@@ -107,6 +120,7 @@ export const isButton = (n: unknown): n is HTMLButtonElement =>
     n,
     'HTMLButtonElement',
     'undefined' === typeof HTMLButtonElement ? undefined : HTMLButtonElement,
+    'BUTTON',
   );
 
 export const isMeter = (n: unknown): n is HTMLMeterElement =>
@@ -114,6 +128,7 @@ export const isMeter = (n: unknown): n is HTMLMeterElement =>
     n,
     'HTMLMeterElement',
     'undefined' === typeof HTMLMeterElement ? undefined : HTMLMeterElement,
+    'METER',
   );
 
 export const isOutput = (n: unknown): n is HTMLOutputElement =>
@@ -121,6 +136,7 @@ export const isOutput = (n: unknown): n is HTMLOutputElement =>
     n,
     'HTMLOutputElement',
     'undefined' === typeof HTMLOutputElement ? undefined : HTMLOutputElement,
+    'OUTPUT',
   );
 
 export const isProgress = (n: unknown): n is HTMLProgressElement =>
@@ -128,6 +144,7 @@ export const isProgress = (n: unknown): n is HTMLProgressElement =>
     n,
     'HTMLProgressElement',
     'undefined' === typeof HTMLProgressElement ? undefined : HTMLProgressElement,
+    'PROGRESS',
   );
 
 export const isForm = (n: unknown): n is HTMLFormElement =>
@@ -135,6 +152,7 @@ export const isForm = (n: unknown): n is HTMLFormElement =>
     n,
     'HTMLFormElement',
     'undefined' === typeof HTMLFormElement ? undefined : HTMLFormElement,
+    'FORM',
   );
 
 export const isFrame = (n: unknown): n is HTMLIFrameElement =>
@@ -142,6 +160,7 @@ export const isFrame = (n: unknown): n is HTMLIFrameElement =>
     n,
     'HTMLIFrameElement',
     'undefined' === typeof HTMLIFrameElement ? undefined : HTMLIFrameElement,
+    'IFRAME',
   );
 
 /**

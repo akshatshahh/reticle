@@ -73,7 +73,10 @@ const SUBMIT_CONTROL_SELECTOR =
 
 export function submitControlFor(el: ActionTarget): HTMLElement | null {
   const found = el.closest('form')?.querySelector(SUBMIT_CONTROL_SELECTOR);
-  return found instanceof HTMLElement ? found : null;
+  // Realm-aware (#1323): a leased button's realm constructors can be
+  // unreachable, so the ambient instanceof check would miss it and skip
+  // the destructive-action guard.
+  return isHtmlElement(found) ? found : null;
 }
 
 export function requiresDangerousConfirmation(text: string, role?: string): boolean {
