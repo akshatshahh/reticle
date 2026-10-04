@@ -58,8 +58,28 @@ export const isSvgElement = (n: unknown): n is SVGElement =>
 /** What an action can drive: any HTML element, or an SVG shape (a chart slice, a map region, an icon). */
 export type ActionTarget = HTMLElement | SVGElement;
 
-export const isActionTarget = (n: unknown): n is ActionTarget =>
-  isHtmlElement(n) || isSvgElement(n);
+/** Namespace URIs are realm-independent, unlike instanceof checks. */
+const HTML_NAMESPACE = 'http://www.w3.org/1999/xhtml';
+const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
+
+export const isActionTarget = (n: unknown): n is ActionTarget => {
+  if (isHtmlElement(n) || isSvgElement(n)) return true;
+  // Fallback for cross-realm edge cases: in isolated contexts (e.g., leased
+  // browser tabs), the instanceof check can fail for genuine HTML/SVG
+  // elements when the node's realm constructors are unreachable from the
+  // adapter's realm. The namespace URI is set by the DOM implementation
+  // itself, so it identifies HTML/SVG elements regardless of realm.
+  // See https://github.com/reticlehq/reticle/issues/1323
+  if (
+    typeof n === 'object' &&
+    n !== null &&
+    (n as Node).nodeType === 1 /* Node.ELEMENT_NODE */
+  ) {
+    const ns = (n as Element).namespaceURI;
+    return ns === HTML_NAMESPACE || ns === SVG_NAMESPACE;
+  }
+  return false;
+};
 
 export const isInput = (n: unknown): n is HTMLInputElement =>
   isIn<HTMLInputElement>(

@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from 'vitest';
-import { isElement, isHtmlElement, isInput, isFrame, valuePrototypeOf } from './realm.js';
+import { isActionTarget, isElement, isHtmlElement, isInput, isFrame, valuePrototypeOf } from './realm.js';
 
 /**
  * The bug these guard: `instanceof` compares against ONE realm's constructor, so an element inside a
@@ -70,5 +70,49 @@ describe('cross-realm type tests', () => {
   it('uses the textarea prototype for a textarea', () => {
     const area = document.createElement('textarea');
     expect(valuePrototypeOf(area) === HTMLTextAreaElement.prototype).toBe(true);
+  });
+});
+
+describe('isActionTarget cross-realm fallback (#1323)', () => {
+  /**
+   * Simulates the isolated-lease condition: a genuine HTML/SVG element whose
+   * realm constructors are unreachable, so `instanceof HTMLElement` fails.
+   * The namespace URI is realm-independent, so the fallback must accept it.
+   */
+  function leaseLikeElement(namespaceURI: string | null): unknown {
+    return {
+      nodeType: 1, // Node.ELEMENT_NODE
+      namespaceURI,
+      ownerDocument: null,
+    };
+  }
+
+  it('accepts an HTML element when instanceof fails (lease condition)', () => {
+    const el = leaseLikeElement('http://www.w3.org/1999/xhtml');
+    // Precondition: the instanceof path really does fail for this shape.
+    expect(isHtmlElement(el)).toBe(false);
+    expect(isActionTarget(el)).toBe(true);
+  });
+
+  it('accepts an SVG element when instanceof fails (lease condition)', () => {
+    const el = leaseLikeElement('http://www.w3.org/2000/svg');
+    expect(isActionTarget(el)).toBe(true);
+  });
+
+  it('rejects non-HTML/SVG namespaces even when instanceof fails', () => {
+    // MathML elements are Elements but not actionable targets.
+    expect(isActionTarget(leaseLikeElement('http://www.w3.org/1998/Math/MathML'))).toBe(false);
+    expect(isActionTarget(leaseLikeElement(null))).toBe(false);
+  });
+
+  it('rejects non-elements', () => {
+    for (const value of [null, undefined, 'button', 7, { nodeType: 3 }]) {
+      expect(isActionTarget(value)).toBe(false);
+    }
+  });
+
+  it('still accepts real elements via the instanceof fast path', () => {
+    expect(isActionTarget(document.createElement('button'))).toBe(true);
+    expect(isActionTarget(document.createElementNS('http://www.w3.org/2000/svg', 'rect'))).toBe(true);
   });
 });
