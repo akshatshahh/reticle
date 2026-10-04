@@ -43,7 +43,7 @@ function isIn<T>(node: unknown, name: string, ambient: unknown, tag?: string): n
   // itself and is realm-independent.
   if (undefined !== tag && 'object' === typeof node && null !== node) {
     const el = node as Element;
-    return 1 === el.nodeType /* Node.ELEMENT_NODE */ && el.tagName === tag;
+    return 1 === el.nodeType /* Node.ELEMENT_NODE */ && tag === el.tagName;
   }
   return false;
 }
@@ -80,11 +80,7 @@ export const isActionTarget = (n: unknown): n is ActionTarget => {
   // adapter's realm. The namespace URI is set by the DOM implementation
   // itself, so it identifies HTML/SVG elements regardless of realm.
   // See https://github.com/reticlehq/reticle/issues/1323
-  if (
-    typeof n === 'object' &&
-    n !== null &&
-    (n as Node).nodeType === 1 /* Node.ELEMENT_NODE */
-  ) {
+  if ('object' === typeof n && null !== n && 1 === (n as Node).nodeType /* Node.ELEMENT_NODE */) {
     const ns = (n as Element).namespaceURI;
     return ns === HTML_NAMESPACE || ns === SVG_NAMESPACE;
   }
