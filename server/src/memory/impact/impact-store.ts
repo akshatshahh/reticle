@@ -99,12 +99,17 @@ export function readScope(path: string, now: number): ImpactScope {
  *
  * tmp + rename, because two daemons can serve two apps in the same repo at once and a half-written
  * counters file is one the next read discards - silently losing the whole history.
+ *
+ * The trailing newline is load-bearing: `.reticle/` lives inside the user's project, and
+ * `prettier --check .` fails on a JSON file without one. The nested `.reticle/.gitignore` does
+ * not help — Prettier only reads the ignore file of the directory it runs from — so every JSON
+ * file Reticle writes must already be exactly what `prettier --write` would produce.
  */
 function writeScope(path: string, scope: ImpactScope): void {
   try {
     mkdirSync(dirname(path), { recursive: true });
     const tmp = `${path}.${String(process.pid)}.tmp`;
-    writeFileSync(tmp, JSON.stringify(scope, null, 2), 'utf8');
+    writeFileSync(tmp, `${JSON.stringify(scope, null, 2)}\n`, 'utf8');
     renameSync(tmp, path);
   } catch {
     // A stats file that cannot be written must never break a tool call. The counters stay in
