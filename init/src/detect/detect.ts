@@ -3,7 +3,7 @@
  * the parsed package.json and the set of config/lock filenames present in the project root.
  */
 
-import { hasPrettierConfig } from '../patch/prettier-ignore.js';
+import { hasPrettierConfig } from './prettier-config.js';
 
 export const Framework = {
   NEXT: 'next',

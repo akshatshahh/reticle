@@ -11,37 +11,9 @@ import { describe, expect, it } from 'vitest';
 import {
   PRETTIERIGNORE_PATH,
   RETICLE_IGNORE_ENTRY,
-  hasPrettierConfig,
   ignoresReticle,
   withReticleIgnored,
 } from './prettier-ignore.js';
-
-describe('detecting Prettier usage', () => {
-  it('finds a .prettierrc config file', () => {
-    expect(hasPrettierConfig(new Set(['.prettierrc', 'package.json']), null)).toBe(true);
-  });
-
-  it('finds a prettier.config.js file', () => {
-    expect(hasPrettierConfig(new Set(['prettier.config.js']), null)).toBe(true);
-  });
-
-  it('finds the "prettier" key in package.json', () => {
-    expect(
-      hasPrettierConfig(new Set(['package.json']), JSON.stringify({ prettier: { semi: false } })),
-    ).toBe(true);
-  });
-
-  it('is false when nothing indicates Prettier', () => {
-    expect(hasPrettierConfig(new Set(['package.json', 'tsconfig.json']), null)).toBe(false);
-    expect(hasPrettierConfig(new Set(['package.json']), JSON.stringify({ scripts: {} }))).toBe(
-      false,
-    );
-  });
-
-  it('does not crash on an unparseable package.json', () => {
-    expect(hasPrettierConfig(new Set(['package.json']), '{not json')).toBe(false);
-  });
-});
 
 describe('detecting an existing .reticle/ exclusion', () => {
   it('matches the entry with a trailing slash', () => {
