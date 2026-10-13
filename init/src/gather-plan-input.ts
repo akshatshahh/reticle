@@ -331,6 +331,7 @@ export function gatherPlanInput(options: InitOptions, io: InitIo, pkg: unknown):
     captureBodies: options.captureBodies,
     hooks: options.hooks,
     cspSources,
+    prettierIgnoreSource: io.readFile('.prettierignore'),
     claudeCli,
     mcpExists,
     insideClaudeCode: io.host.insideClaudeCode(),

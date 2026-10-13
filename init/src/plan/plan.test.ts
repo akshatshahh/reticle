@@ -1252,3 +1252,4 @@ describe('init --hooks', () => {
     expect(buildPlan(input({})).steps.some((s) => s.title === HOOK_STEP)).toBe(false);
   });
 });
+

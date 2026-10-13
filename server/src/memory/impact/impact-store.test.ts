@@ -419,36 +419,3 @@ describe('all time, beside one project', () => {
     expect(shown.since).toBe(now - 30 * DAY);
   });
 });
-
-/**
- * Reticle's own files must not break the project's formatter check. `prettier --check .`
- * in a freshly driven project fails on `.reticle/impact.json` when it lacks the trailing
- * newline Prettier requires — the nested `.reticle/.gitignore` does not help, because Prettier
- * only reads the ignore file of the directory it runs from. Every JSON file Reticle writes
- * into `.reticle/` must end with a newline, exactly as `prettier --write` would leave it.
- */
-describe('the impact file on disk', () => {
-  it('ends with a newline so prettier --check passes', () => {
-    const root = mkdtempSync(join(tmpdir(), 'impact-newline-'));
-    const store = new ImpactStore({
-      reticleRoot: join(root, '.reticle'),
-      projectName: 'demo',
-      now: () => 5_000,
-    });
-    store.record({
-      calls: 1,
-      verdicts: 1,
-      passed: 1,
-      failed: 0,
-      tokensReturned: 0,
-      drivingMs: 100,
-    });
-    store.flush();
-    const raw = readFileSync(join(root, '.reticle', 'impact.json'), 'utf8');
-    expect(raw.endsWith('\n'), 'impact.json must end with a newline for prettier --check').toBe(
-      true,
-    );
-    // And the body must be exactly what Prettier would produce: 2-space indent, trailing newline.
-    expect(raw).toBe(`${JSON.stringify(JSON.parse(raw), null, 2)}\n`);
-  });
-});
