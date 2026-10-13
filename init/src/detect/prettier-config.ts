@@ -6,6 +6,13 @@
  * `directory-reach.test.ts` forbids. Detection belongs here anyway.
  */
 
+interface PackageJsonLike {
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
+  prettier?: unknown;
+}
+
 /** Filenames that indicate the project uses Prettier. */
 export const PRETTIER_CONFIG_FILES = new Set([
   '.prettierrc',
@@ -25,29 +32,16 @@ export const PRETTIER_CONFIG_FILES = new Set([
 
 /**
  * True when the project uses Prettier: a Prettier config file exists at the root,
- * or package.json declares a "prettier" key.
+ * package.json declares a "prettier" key, or prettier is in (dev)dependencies.
  */
-export function hasPrettierConfig(
-  rootFiles: ReadonlySet<string>,
-  packageJsonSource: string | null,
-): boolean {
+export function hasPrettierConfig(rootFiles: ReadonlySet<string>, pkg: PackageJsonLike): boolean {
   for (const name of rootFiles) {
     if (PRETTIER_CONFIG_FILES.has(name)) return true;
   }
-  if (packageJsonSource !== null) {
-    try {
-      const pkg: unknown = JSON.parse(packageJsonSource);
-      if (
-        'object' === typeof pkg &&
-        pkg !== null &&
-        'prettier' in pkg &&
-        (pkg as Record<string, unknown>).prettier !== undefined
-      ) {
-        return true;
-      }
-    } catch {
-      // An unparseable package.json is not our problem here; other steps report it.
-    }
-  }
-  return false;
+  if (pkg.prettier !== undefined) return true;
+  return (
+    pkg.dependencies?.prettier !== undefined ||
+    pkg.devDependencies?.prettier !== undefined ||
+    pkg.peerDependencies?.prettier !== undefined
+  );
 }

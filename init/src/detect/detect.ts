@@ -510,7 +510,7 @@ export function detect(input: DetectInput): Detection {
     typescript:
       hasAnyConfig(input.configFiles, TS_CONFIGS) ||
       depVersion(input.pkg, 'typescript') !== undefined,
-    usesPrettier: hasPrettierConfig(input.configFiles, JSON.stringify(input.pkg)),
+    usesPrettier: hasPrettierConfig(input.configFiles, input.pkg),
     reactMajor,
     needsSourceMapping: reactMajor !== undefined && reactMajor >= 19,
     customReconciler: CUSTOM_RECONCILER_DEPS.some(
