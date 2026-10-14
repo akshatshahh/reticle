@@ -31,7 +31,7 @@ export function ignoresReticle(content: string): boolean {
     .split('\n')
     .map((line) => line.trim())
     .filter((line) => '' !== line && !line.startsWith('#'))
-    .some((line) => '.reticle/' === line || '.reticle' === line);
+    .some((line) => RETICLE_IGNORE_ENTRY === line || '.reticle' === line);
 }
 
 const MANAGED_HEADER =

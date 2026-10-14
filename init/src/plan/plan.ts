@@ -72,6 +72,7 @@ import {
 import { CLAUDE_SETTINGS_PATH, claudeSettingsSteps } from './stop-hook-step.js';
 import {
   PRETTIERIGNORE_PATH,
+  RETICLE_IGNORE_ENTRY,
   ignoresReticle,
   withReticleIgnored,
 } from '@/patch/prettier-ignore.js';
@@ -602,7 +603,7 @@ function prettierIgnoreStep(input: PlanInput): Step | null {
       null === existing
         ? 'create .prettierignore excluding .reticle/ so `prettier --check` passes'
         : 'add .reticle/ to .prettierignore so `prettier --check` passes',
-    write: { path: PRETTIERIGNORE_PATH, content, expect: ['.reticle/'] },
+    write: { path: PRETTIERIGNORE_PATH, content, expect: [RETICLE_IGNORE_ENTRY] },
   };
 }
 
